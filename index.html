@@ -27,10 +27,10 @@
       border: 3px solid #444;
       border-radius: 12px;
       padding: 20px;
-      width: 200px;
+      width: 220px;
       cursor: pointer;
       color: #fff;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
     }
     .card:focus, .card:hover {
@@ -42,13 +42,13 @@
     #game-container { width: 100vw; height: 100vh; display: none; }
     #connection-info {
       background: #222;
-      padding: 15px;
+      padding: 12px;
       margin: 15px auto;
       width: 80%;
       border-radius: 8px;
       border: 1px solid #333;
     }
-    .url-text { color: #00ffcc; font-weight: bold; font-size: 1.1rem; }
+    .url-text { color: #00ffcc; font-weight: bold; }
   </style>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
@@ -58,26 +58,38 @@
     <h1>📺 TV Game Console</h1>
     
     <div id="connection-info">
-      <p style="margin: 0 0 5px 0;">🎮 Play with Sony Remote <b>OR</b> Phone Web Remote:</p>
+      <p style="margin: 0 0 5px 0;">🎮 Controller / Phone Link:</p>
       <span class="url-text">https://wiiDS-tv.github.io/wiiDS-tv/controller.html</span>
     </div>
 
     <div class="grid">
-      <!-- Press Enter/Select on TV Remote or Tap on Phone to launch -->
-      <button class="card" autofocus onclick="loadGame('nds', 'YOUR_MARIO_KART_DS_LINK.nds')">🏎️ Mario Kart DS</button>
-      <button class="card" onclick="loadGame('nds', 'YOUR_NSMB_DS_LINK.nds')">🍄 New Super Mario</button>
+      <!-- NDS Games (Loaded via uploaded GitHub ROMs) -->
+      <button class="card" autofocus onclick="loadGame('nds', './mariokartds.nds')">
+        🏎️ Mario Kart DS
+      </button>
+
+      <button class="card" onclick="loadGame('nds', './nsmb.nds')">
+        🍄 New Super Mario Bros DS
+      </button>
+
+      <!-- Wii Games (Launch Dolphin TV App) -->
+      <button class="card" onclick="launchWiiApp()">
+        🎾 Wii Sports
+      </button>
+
+      <button class="card" onclick="launchWiiApp()">
+        🏎️ Mario Kart Wii
+      </button>
     </div>
   </div>
 
   <div id="game-container"></div>
 
   <script>
-    // 1. SETUP PHONE CONTROLLER CONNECTION (PeerJS)
+    // 1. PeerJS Remote Controller
     const peer = new Peer('wiids-tv-room');
-
     peer.on('connection', (conn) => {
       conn.on('data', (data) => {
-        // When phone sends a key press, trigger it on the TV
         if (data.type === 'key') {
           const eventType = data.pressed ? 'keydown' : 'keyup';
           window.dispatchEvent(new KeyboardEvent(eventType, { key: data.key, bubbles: true }));
@@ -85,9 +97,8 @@
       });
     });
 
-    // 2. SETUP SONY TV REMOTE NAVIGATION
+    // 2. Sony Remote Key Handler
     window.addEventListener('keydown', (e) => {
-      // Map Sony Remote Enter / D-Pad Select button
       if (e.key === 'Enter' || e.keyCode === 13) {
         const activeElem = document.activeElement;
         if (activeElem && activeElem.classList.contains('card')) {
@@ -96,7 +107,7 @@
       }
     });
 
-    // 3. LAUNCH GAME
+    // 3. Load NDS Web Emulator
     function loadGame(core, url) {
       document.getElementById('menu').style.display = 'none';
       const container = document.getElementById('game-container');
@@ -110,6 +121,12 @@
       const script = document.createElement('script');
       script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
       document.body.appendChild(script);
+    }
+
+    // 4. Launch Dolphin TV App for Wii Titles
+    function launchWiiApp() {
+      // Attempts to launch Dolphin Android TV app or notifies user
+      window.location.href = "intent://org.dolphinemu.dolphinemu/#Intent;scheme=launch;package=org.dolphinemu.dolphinemu;end";
     }
   </script>
 </body>
