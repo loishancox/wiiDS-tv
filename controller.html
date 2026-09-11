@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Phone Controller</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      touch-action: none;
+      user-select: none;
+      text-align: center;
+    }
+    .status { padding: 10px; background: #222; font-size: 0.9rem; }
+    .pad-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 40vh;
+      align-items: center;
+      padding: 10px;
+    }
+    .dpad, .buttons { display: grid; gap: 10px; justify-content: center; }
+    .dpad { grid-template-columns: repeat(3, 50px); }
+    .buttons { grid-template-columns: repeat(2, 60px); }
+    button {
+      background: #333;
+      color: #fff;
+      border: 2px solid #555;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      padding: 15px 0;
+    }
+    button:active { background: #00ffcc; color: #000; }
+    #touchscreen {
+      height: 45vh;
+      margin: 10px;
+      border: 2px dashed #00ffcc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      color: #888;
+    }
+  </style>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+  <div class="status" id="status">Connecting to TV...</div>
+
+  <div class="pad-container">
+    <!-- D-PAD -->
+    <div class="dpad">
+      <div></div>
+      <button ontouchstart="sendKey('ArrowUp', true)" ontouchend="sendKey('ArrowUp', false)">▲</button>
+      <div></div>
+      <button ontouchstart="sendKey('ArrowLeft', true)" ontouchend="sendKey('ArrowLeft', false)">◀</button>
+      <div></div>
+      <button ontouchstart="sendKey('ArrowRight', true)" ontouchend="sendKey('ArrowRight', false)">▶</button>
+      <div></div>
+      <button ontouchstart="sendKey('ArrowDown', true)" ontouchend="sendKey('ArrowDown', false)">▼</button>
+      <div></div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="buttons">
+      <button ontouchstart="sendKey('x', true)" ontouchend="sendKey('x', false)">X</button>
+      <button ontouchstart="sendKey('a', true)" ontouchend="sendKey('a', false)">A</button>
+      <button ontouchstart="sendKey('y', true)" ontouchend="sendKey('y', false)">Y</button>
+      <button ontouchstart="sendKey('s', true)" ontouchend="sendKey('s', false)">B</button>
+    </div>
+  </div>
+
+  <!-- NDS BOTTOM TOUCHSCREEN AREA -->
+  <div id="touchscreen">
+    📱 NDS Bottom Touchscreen Area
+  </div>
+
+  <script>
+    const peer = new Peer();
+    let conn = null;
+
+    peer.on('open', (id) => {
+      // Connect to the TV's Peer ID (fixed key for your local setup)
+      conn = peer.connect('wiids-tv-room');
+
+      conn.on('open', () => {
+        document.getElementById('status').innerText = "🟢 Connected to TV!";
+        document.getElementById('status').style.background = "#006622";
+      });
+    });
+
+    function sendKey(key, isPressed) {
+      if (conn && conn.open) {
+        conn.send({ type: 'key', key: key, pressed: isPressed });
+      }
+    }
+
+    // DS Touchscreen input tracking
+    const touchArea = document.getElementById('touchscreen');
+    touchArea.addEventListener('touchmove', (e) => {
+      const rect = touchArea.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = (touch.clientX - rect.left) / rect.width;
+      const y = (touch.clientY - rect.top) / rect.height;
+
+      if (conn && conn.open) {
+        conn.send({ type: 'touch', x: x, y: y });
+      }
+    });
+  </script>
+</body>
+</html>
